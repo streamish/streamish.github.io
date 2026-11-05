@@ -3,7 +3,7 @@ on:
   push:
     branches: [gh-pages]
 jobs:
-  test:
+  publish:
     timeout-minutes: 60
     runs-on: ubuntu-latest
 
@@ -72,39 +72,6 @@ jobs:
           chmod +x monolith
       - name: Build docs
         run: ./monolith http://localhost:7100/swagger -o api.html
-      - name: Upload API docs
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-docs
-          path: api.html
-      - name: Backend debugging logs
-        if: failure()
-        shell: bash
-        continue-on-error: true
-        run: |
-          if [ -f "$RUNNER_TEMP/backend.log" ]; then
-            tail -n 200 "$RUNNER_TEMP/backend.log" || true
-          else
-            echo "No backend.log found at $RUNNER_TEMP/backend.log"
-          fi
-  deploy:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/download-artifact@v4
-        with:
-          name: api-docs
-          path: .
       - name: Prepare site files
         run: |
           mkdir -p _site
@@ -115,3 +82,13 @@ jobs:
           path: _site
       - uses: actions/deploy-pages@v4
         id: deployment
+      - name: Backend debugging logs
+        if: failure()
+        shell: bash
+        continue-on-error: true
+        run: |
+          if [ -f "$RUNNER_TEMP/backend.log" ]; then
+            tail -n 200 "$RUNNER_TEMP/backend.log" || true
+          else
+            echo "No backend.log found at $RUNNER_TEMP/backend.log"
+          fi
