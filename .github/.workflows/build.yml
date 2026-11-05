@@ -1,9 +1,7 @@
-name: Build API docs
+name: Publish website
 on:
   push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+    branches: [gh-pages]
 jobs:
   test:
     timeout-minutes: 60
