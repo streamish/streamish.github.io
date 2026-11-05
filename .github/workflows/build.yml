@@ -74,10 +74,6 @@ jobs:
           chmod +x monolith
       - name: Build docs
         run: ./monolith http://localhost:7100/swagger -o api.html
-      - name: Build website CSS
-        run: |
-          npm ci
-          npm run build
       - name: Prepare site files
         run: |
           mkdir -p _site
