@@ -1,0 +1,82 @@
+name: Build API docs
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine current branch
+        id: branch
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            branch="${{ github.head_ref }}"
+          else
+            branch="${{ github.ref_name }}"
+          fi
+          # Docker build arguments cannot safely contain a newline.
+          branch="${branch//$'\n'/}"
+          branch="${branch//$'\r'/}"
+          echo "Using branch: $branch"
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
+      - name: Install monolith
+        run: |
+          curl -L -o monolith https://github.com/Y2Z/monolith/releases/download/v2.10.1/monolith-gnu-linux-x86_64
+          chmod +x monolith
+      - name: Clone music-server repo
+        run: |
+          git clone https://github.com/${{ github.repository_owner }}/music-server.git music-server
+          cd music-server
+          if git ls-remote --exit-code --heads origin "${{ steps.branch.outputs.name }}" >/dev/null 2>&1; then
+            echo "Using frontend branch: ${{ steps.branch.outputs.name }}"
+            git fetch origin "${{ steps.branch.outputs.name }}"
+            git checkout -B "${{ steps.branch.outputs.name }}" "origin/${{ steps.branch.outputs.name }}"
+          fi
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            music-server/package-lock.json
+      - name: Install music-server dependencies
+        run: npm ci
+        working-directory: music-server
+      - name: Start backend
+        run: |
+          LOG_FILE="$RUNNER_TEMP/backend.log"
+          npm run start:test > "$LOG_FILE" 2>&1 &
+        working-directory: music-server
+      - name: Wait for backend to start
+        run: |
+          LOG_FILE="$RUNNER_TEMP/backend.log"
+          EXPECTED='LOG [IndexerService] Finished test indexing'
+          for i in $(seq 1 120); do
+            if sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g' "$LOG_FILE" 2>/dev/null |
+              grep -Fq "$EXPECTED"; then
+              echo "Backend startup message detected"
+              exit 0
+            fi
+            echo "Waiting for backend startup message... attempt $i/120"
+            sleep 1
+          done
+          echo "Backend did not emit the expected startup message within 120 seconds"
+          exit 1
+      - name: Build docs
+        run: monolith http://localhost:7100/swagger -o api.html
+      - name: Backend debugging logs
+        if: failure()
+        shell: bash
+        continue-on-error: true
+        run: |
+          if [ -f "$RUNNER_TEMP/backend.log" ]; then
+            tail -n 200 "$RUNNER_TEMP/backend.log" || true
+          else
+            echo "No backend.log found at $RUNNER_TEMP/backend.log"
+          fi

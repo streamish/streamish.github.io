@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Streamish is a modern self-hosted music server and web UI compatible with Synology, QNAP, DLNA and Subsonic mobile apps."
+    />
+    <title>Streamish — Your Music, Your Server</title>
+    <style>
+      @font-face {
+        font-family: Inter;
+        src: url('/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, sans-serif;
+        color: white;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background-attachment: fixed;
+        background-image:
+          radial-gradient(
+            circle at 10% 10%,
+            rgba(167, 139, 250, 0.35),
+            transparent 30%
+          ),
+          radial-gradient(
+            circle at 90% 15%,
+            rgba(45, 212, 191, 0.25),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 50% 100%,
+            rgba(59, 130, 246, 0.3),
+            transparent 35%
+          ),
+          linear-gradient(135deg, #111827 0%, #312e81 48%, #0f766e 100%);
+      }
+      .rotating-word {
+        display: inline-block;
+        color: #a78bfa;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      .rotating-word.is-changing {
+        opacity: 0;
+        transform: translateY(0.25em);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .rotating-word {
+          transition: none;
+        }
+      }
+      /**
+       * mast head
+       */
+      header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      header h1 {
+        font-weight: normal;
+        font-size: 2.5rem;
+        text-align: center;
+        margin: 4rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row;
+      }
+      header h1 img { 
+        margin-right: 1rem;
+      }
+      header p {
+        font-weight: normal;
+        font-size: 1.25rem;
+        max-width: 700px;
+        margin: 0;
+        text-align: center;
+      }
+      header ol {
+        list-style-type: none;
+        padding: 0;
+        margin: 2rem 0;
+        display: flex;
+        justify-content: center;
+      }
+      header li {
+        display: inline-block;
+        margin-right: 2rem;
+      }
+      header li:last-of-type {
+        margin-right: 0;
+      }
+      header li a {
+        text-decoration: none;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        background-color: rgba(255, 255, 255, 0.25);
+        border-radius: 0.25rem;
+        padding: 0.5rem 1rem;
+        color: white;
+      }
+      header li a:hover {
+        background-color: rgba(255, 255, 255, 0.35);
+      }
+      /**
+       * content blocks
+       */
+      section {
+        padding: 4rem 2rem;
+        margin: 2rem 0rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        width: 100%;
+        justify-content: center;
+      }
+      section h2 {
+        text-align: center;
+        font-weight: 300;
+      }
+
+      section p {
+        font-weight: normal;
+        font-size: 1.25rem;
+        max-width: 700px;
+        margin: 0;
+        text-align: center;
+      }
+
+      footer {
+        display: flex;
+        justify-content: center;
+        padding: 2rem 0;
+        font-size: 0.75rem;
+      }
+
+      /** 
+       * compatible app screenshots
+       */
+      .app-screenshots {
+        list-style-type: none;
+        gap: 4rem;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+      }
+      .app-screenshots li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        line-height: 2rem;
+      }
+
+      /**
+       * API example code
+       */
+      .api-block { 
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .api-block p {
+        text-align: left;
+        font-size: 1rem;
+        max-width: 30rem;
+        margin: 0 2rem 0 0;
+        padding: 0;
+      }
+
+      /**
+       * code block formatting
+       */
+      .code-block {
+        display: block;
+        margin-left: 2rem;
+        padding: 1rem;
+        margin: 0;
+        border-radius: 0.75rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        font: 0.875rem/1.8 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      
+      .code-block pre { 
+        padding: 0;
+        margin: 0;
+      }
+
+      .code-keyword {
+        color: #c084fc;
+      }
+
+      .code-string {
+        color: #a5d6a7;
+      }
+
+      .code-method {
+        color: #7dd3fc;
+      }
+
+      .code-variable {
+        color: #fbbf24;
+      }
+
+      .code-function {
+        color: #93c5fd;
+      }
+      .code-comment {
+        color: #888;
+      }
+      .code-comment a { 
+        color: #999;
+      }
+    </style>
+    <script>
+      window.onload = () => {
+      const appTypes = ["browser", "iPhone", "Android", "desktop"];
+      const compatibleTypes = ['Synology', 'QNAP', 'Subsonic'];
+      const appType = document.getElementById("app-type");
+      const compatibleType = document.getElementById("compatible-type");
+      let appIndex = 0;
+      let compatibleIndex = 0;
+
+      setInterval(() => {
+        appType.classList.add("is-changing");
+
+        setTimeout(() => {
+          compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
+          appIndex = (appIndex + 1) % appTypes.length;
+          appType.textContent = appTypes[appIndex];
+          compatibleType.textContent = compatibleTypes[compatibleIndex];
+          appType.classList.remove("is-changing");
+        }, 250);
+      }, 2500);
+      
+      };
+    </script>
+  </head>
+  <body>
+    <header id="top">
+      <h1><img src="logo-dark.png" style="height: 1em; vertical-align: middle;" /> Streamish Music</h1>
+      <p>
+        Free and private self-hosted music server for multiple users, compatible
+        with lots of great Android and iOS apps and web browsers.
+      </p>
+      <ol>
+        <li>
+          <a href="https://github.com/Streamish/docker-image">
+            Run with docker
+          </a>
+        </li>
+        <li>
+          <a href="/api" target="_blank" rel="noopener noreferrer">
+            API documentation
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://github.com/Streamish"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on GitHub
+          </a>
+        </li>
+      </ol>
+    </header>
+    <main>
+      <section>
+        <h2>One server for all the <span class="rotating-word" id="compatible-type"></span> apps</h2>
+        <ul class="app-screenshots">
+          <li>
+            Synology DS Audio
+            <img
+              src="./screenshots/ds-audio-iphone.png"
+              alt="Synology DS Audio application on iPhone"
+            />
+          </li>
+          <li>
+            QNAP Qmusic
+            <img
+              src="./screenshots/qmusic-iphone.png"
+              alt="QNAP Qmusic application on iPhone"
+            />
+          </li>
+          <li>
+            Subsonic apps
+            <img
+              src="./screenshots/substreamer-iphone.png"
+              alt="Substreamer application on iPhone"
+            />
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>Full-featured, responsive web interface</h2>
+        <ul class="app-screenshots">
+          <li>
+            <img
+              src="./screenshots/Screenshot 2026-11-04 at 12-31-49 Albums.png"
+              alt="Synology DS Audio application on iPhone"
+            />
+          </li>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>Code your dream music player <span class="rotating-word" id="app-type"></span> app</h2>
+        <div class="api-block">
+        <div class="code-block"><pre class="code-block"><code><span class="code-comment">// type definition generated from OpenAPI YAML using the
+// "openapi-typescript" library and converted to typed client 
+// with "openapi-fetch" (see <a href="https://openapi-ts.dev">openapi-ts.dev</a>)</span>
+<span class="code-keyword">import</span> createClient <span class="code-keyword">from</span> <span class="code-string">'openapi-fetch'</span>;
+<span class="code-keyword">import</span> <span class="code-keyword">type</span> { paths } <span class="code-keyword">from</span> <span class="code-string">'src/openapi-schema'</span>;
+
+<span class="code-comment">// create typed client for API</span>
+<span class="code-keyword">const</span> client = <span class="code-method">createClient</span>&lt;paths&gt;({
+  baseUrl: <span class="code-string">`http://localhost:7000`</span>,
+});
+
+<span class="code-comment">// sign in</span>
+<span class="code-keyword">const</span> { data: sessionData } = <span class="code-keyword">await</span> client.<span class="code-method">POST</span>(<span class="code-string">`/api/create-session`</span>, {
+  body: {
+    username: <span class="code-string">'woodrow'</span>,
+    password: <span class="code-string">'*********'</span>,
+  },
+});
+
+<span class="code-comment">// list albums with tracks</span>
+<span class="code-keyword">const</span> { data: albumData } = <span class="code-keyword">await</span> client.<span class="code-method">GET</span>(<span class="code-string">`/api/list-albums-with-tracks`</span>, {
+  params: {
+    query: {
+      artist: <span class="code-string">'Michael Jackson'</span>
+    },
+    header: {
+      Authorization: <span class="code-string">`Bearer </span>${sessionData?.token}<span class="code-string">`</span>,
+    }
+  },
+});
+albumData?.albums.<span class="code-method">forEach</span>((album) =&gt; {
+  console.<span class="code-method">log</span>(album.title);
+  album.tracks?.<span class="code-method">forEach</span>((track) =&gt; {
+    console.<span class="code-method">log</span>(track.title);
+  });
+});</code></pre></div>
+        </div>
+      </section>
+    </main>
+    <footer class="px-4 py-8 text-[0.9rem] text-slate-300">
+      <div class="text-center">
+        <span
+          >&copy; 2026 All Rights Reserved. Available under MIT license.</span
+        >
+      </div>
+    </footer>
+  </body>
+</html>
