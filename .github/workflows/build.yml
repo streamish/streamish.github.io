@@ -78,6 +78,8 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html api.html _site/
+          cp -R fonts _site/
+          cp -R images _site/
           cp -R screenshots _site/
       - name: Publish to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
