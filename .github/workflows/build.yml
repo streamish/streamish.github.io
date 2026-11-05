@@ -66,8 +66,12 @@ jobs:
           done
           echo "Backend did not emit the expected startup message within 120 seconds"
           exit 1
+      - name: Install monolith
+        run: |
+          curl -L -o monolith https://github.com/Y2Z/monolith/releases/download/v2.10.1/monolith-gnu-linux-x86_64
+          chmod +x monolith
       - name: Build docs
-        run: monolith http://localhost:7100/swagger -o api.html
+        run: ./monolith http://localhost:7100/swagger -o api.html
       - name: Upload API docs
         uses: actions/upload-artifact@v4
         with:
