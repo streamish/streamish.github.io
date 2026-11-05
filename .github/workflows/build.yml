@@ -1,7 +1,9 @@
 name: Publish website
 on:
   push:
-    branches: [gh-pages]
+    branches: [main, master]
+permissions:
+  contents: write
 jobs:
   publish:
     timeout-minutes: 60
@@ -72,16 +74,21 @@ jobs:
           chmod +x monolith
       - name: Build docs
         run: ./monolith http://localhost:7100/swagger -o api.html
+      - name: Build website CSS
+        run: |
+          npm ci
+          npm run build
       - name: Prepare site files
         run: |
           mkdir -p _site
           cp index.html api.html _site/
           cp -R screenshots _site/
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: _site
-      - uses: actions/deploy-pages@v4
-        id: deployment
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _site
+          publish_branch: gh-pages
       - name: Backend debugging logs
         if: failure()
         shell: bash
