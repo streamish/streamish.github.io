@@ -228,6 +228,29 @@
         padding: 0;
       }
 
+      .code-tabs {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .code-tab {
+        padding: 0.35rem 0.9rem;
+        border: none;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: #94a3b8;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .code-tab.active {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-color: #64748b;
+      }
+
       /**
        * code block formatting
        */
@@ -247,6 +270,10 @@
       .code-block pre { 
         padding: 0;
         margin: 0;
+      }
+
+      .code-block[hidden] {
+        display: none;
       }
 
       .code-keyword {
@@ -277,24 +304,45 @@
     </style>
     <script>
       window.onload = () => {
-      const appTypes = ["browser", "iPhone", "Android", "desktop"];
+      const appTypes = ["Typescript", "iPhone", "Android"];
       const compatibleTypes = ['Synology', 'QNAP', 'Subsonic'];
       const appType = document.getElementById("app-type");
       const compatibleType = document.getElementById("compatible-type");
       let appIndex = 0;
       let compatibleIndex = 0;
 
-      setInterval(() => {
+      const appTabs = ["typescript", "ios", "android", "typescript"];
+      const tabButtons = document.querySelectorAll(".code-tab");
+
+      const showTab = (name) => {
+        tabButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+        ["typescript", "ios", "android"].forEach((t) => {
+          document.getElementById("code-" + t).hidden = t !== name;
+        });
+      };
+
+      let swapTimeout;
+      const rotation = setInterval(() => {
         appType.classList.add("is-changing");
 
-        setTimeout(() => {
+        swapTimeout = setTimeout(() => {
           compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
           appIndex = (appIndex + 1) % appTypes.length;
           appType.textContent = appTypes[appIndex];
           compatibleType.textContent = compatibleTypes[compatibleIndex];
+          showTab(appTabs[appIndex]);
           appType.classList.remove("is-changing");
         }, 250);
       }, 2500);
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          clearInterval(rotation);
+          clearTimeout(swapTimeout);
+          appType.classList.remove("is-changing");
+          showTab(button.dataset.tab);
+        });
+      });
       
       };
     </script>
@@ -330,7 +378,7 @@
     </header>
     <main>
       <section>
-        <h2>One server for all the <span class="rotating-word" id="compatible-type"></span> apps</h2>
+        <h2>One server for all the <span class="rotating-word" id="compatible-type">Synology</span> apps</h2>
         <ul class="app-screenshots">
           <li>
             Synology DS Audio
@@ -368,9 +416,14 @@
         </ul>
       </section>
       <section>
-        <h2>Code your dream music player <span class="rotating-word" id="app-type"></span> app</h2>
+        <h2>Code your dream music player <span class="rotating-word" id="app-type">web</span> app</h2>
+        <div class="code-tabs" role="tablist">
+          <button type="button" class="code-tab active" role="tab" data-tab="typescript">TypeScript</button>
+          <button type="button" class="code-tab" role="tab" data-tab="ios">iOS</button>
+          <button type="button" class="code-tab" role="tab" data-tab="android">Android</button>
+        </div>
         <div class="api-block">
-        <div class="code-block"><pre class="code-block"><code><span class="code-comment">// type definition generated from OpenAPI YAML using the
+        <div class="code-block" id="code-typescript"><pre class="code-block"><code><span class="code-comment">// type definition generated from OpenAPI YAML using the
 // "openapi-typescript" library and converted to typed client 
 // with "openapi-fetch" (see <a href="https://openapi-ts.dev">openapi-ts.dev</a>)</span>
 <span class="code-keyword">import</span> createClient <span class="code-keyword">from</span> <span class="code-string">'openapi-fetch'</span>;
@@ -405,7 +458,88 @@ albumData?.albums.<span class="code-method">forEach</span>((album) =&gt; {
   album.tracks?.<span class="code-method">forEach</span>((track) =&gt; {
     console.<span class="code-method">log</span>(track.title);
   });
-});</code></pre></div>
+});</code></pre>
+        </div>
+        <div class="code-block" id="code-ios" hidden><pre class="code-block"><code><span class="code-comment">// Swift: URLSession + Codable</span>
+<span class="code-keyword">import</span> Foundation
+
+<span class="code-keyword">struct</span> Track: Codable { <span class="code-keyword">let</span> title: String }
+<span class="code-keyword">struct</span> Album: Codable { <span class="code-keyword">let</span> title: String; <span class="code-keyword">let</span> tracks: [Track]? }
+<span class="code-keyword">struct</span> Albums: Codable { <span class="code-keyword">let</span> albums: [Album] }
+<span class="code-keyword">struct</span> Session: Codable { <span class="code-keyword">let</span> token: String }
+
+<span class="code-keyword">let</span> baseUrl = <span class="code-method">URL</span>(string: <span class="code-string">"http://localhost:7000"</span>)!
+
+<span class="code-comment">// sign in</span>
+<span class="code-keyword">var</span> signIn = <span class="code-method">URLRequest</span>(url: baseUrl.<span class="code-method">appendingPathComponent</span>(<span class="code-string">"api/create-session"</span>))
+signIn.httpMethod = <span class="code-string">"POST"</span>
+signIn.<span class="code-method">setValue</span>(<span class="code-string">"application/json"</span>, forHTTPHeaderField: <span class="code-string">"Content-Type"</span>)
+signIn.httpBody = <span class="code-keyword">try</span> JSONEncoder().<span class="code-method">encode</span>([
+  <span class="code-string">"username"</span>: <span class="code-string">"woodrow"</span>,
+  <span class="code-string">"password"</span>: <span class="code-string">"*********"</span>,
+])
+<span class="code-keyword">let</span> (sessionBytes, _) = <span class="code-keyword">try</span> <span class="code-keyword">await</span> URLSession.shared.<span class="code-method">data</span>(for: signIn)
+<span class="code-keyword">let</span> session = <span class="code-keyword">try</span> JSONDecoder().<span class="code-method">decode</span>(Session.self, from: sessionBytes)
+
+<span class="code-comment">// list albums with tracks</span>
+<span class="code-keyword">var</span> components = <span class="code-method">URLComponents</span>(
+  url: baseUrl.<span class="code-method">appendingPathComponent</span>(<span class="code-string">"api/list-albums-with-tracks"</span>),
+  resolvingAgainstBaseURL: <span class="code-keyword">false</span>)!
+components.queryItems = [<span class="code-method">URLQueryItem</span>(name: <span class="code-string">"artist"</span>, value: <span class="code-string">"Michael Jackson"</span>)]
+<span class="code-keyword">var</span> request = <span class="code-method">URLRequest</span>(url: components.url!)
+request.<span class="code-method">setValue</span>(session.token, forHTTPHeaderField: <span class="code-string">"Authorization"</span>)
+<span class="code-keyword">let</span> (albumBytes, _) = <span class="code-keyword">try</span> <span class="code-keyword">await</span> URLSession.shared.<span class="code-method">data</span>(for: request)
+<span class="code-keyword">let</span> albumData = <span class="code-keyword">try</span> JSONDecoder().<span class="code-method">decode</span>(Albums.self, from: albumBytes)
+<span class="code-keyword">for</span> album <span class="code-keyword">in</span> albumData.albums {
+  <span class="code-method">print</span>(album.title)
+  <span class="code-keyword">for</span> track <span class="code-keyword">in</span> album.tracks ?? [] {
+    <span class="code-method">print</span>(track.title)
+  }
+}</code></pre>
+        </div>
+        <div class="code-block" id="code-android" hidden><pre class="code-block"><code><span class="code-comment">// Java: OkHttp + Gson</span>
+<span class="code-keyword">import</span> okhttp3.*;
+<span class="code-keyword">import</span> com.google.gson.*;
+
+OkHttpClient client = <span class="code-keyword">new</span> <span class="code-method">OkHttpClient</span>();
+Gson gson = <span class="code-keyword">new</span> <span class="code-method">Gson</span>();
+String baseUrl = <span class="code-string">"http://localhost:7000"</span>;
+
+<span class="code-comment">// sign in</span>
+JsonObject credentials = <span class="code-keyword">new</span> <span class="code-method">JsonObject</span>();
+credentials.<span class="code-method">addProperty</span>(<span class="code-string">"username"</span>, <span class="code-string">"woodrow"</span>);
+credentials.<span class="code-method">addProperty</span>(<span class="code-string">"password"</span>, <span class="code-string">"*********"</span>);
+Request signIn = <span class="code-keyword">new</span> Request.<span class="code-method">Builder</span>()
+  .<span class="code-method">url</span>(baseUrl + <span class="code-string">"/api/create-session"</span>)
+  .<span class="code-method">post</span>(RequestBody.<span class="code-method">create</span>(credentials.<span class="code-method">toString</span>(),
+    MediaType.<span class="code-method">get</span>(<span class="code-string">"application/json"</span>)))
+  .<span class="code-method">build</span>();
+<span class="code-keyword">try</span> (Response response = client.<span class="code-method">newCall</span>(signIn).<span class="code-method">execute</span>()) {
+  JsonObject session = gson.<span class="code-method">fromJson</span>(response.body().<span class="code-method">string</span>(), JsonObject.<span class="code-keyword">class</span>);
+  String token = session.<span class="code-method">get</span>(<span class="code-string">"token"</span>).<span class="code-method">getAsString</span>();
+
+  <span class="code-comment">// list albums with tracks</span>
+  HttpUrl url = HttpUrl.<span class="code-method">parse</span>(baseUrl + <span class="code-string">"/api/list-albums-with-tracks"</span>)
+    .<span class="code-method">newBuilder</span>()
+    .<span class="code-method">addQueryParameter</span>(<span class="code-string">"artist"</span>, <span class="code-string">"Michael Jackson"</span>)
+    .<span class="code-method">build</span>();
+  Request request = <span class="code-keyword">new</span> Request.<span class="code-method">Builder</span>()
+    .<span class="code-method">url</span>(url)
+    .<span class="code-method">header</span>(<span class="code-string">"Authorization"</span>, token)
+    .<span class="code-method">build</span>();
+  <span class="code-keyword">try</span> (Response albumResponse = client.<span class="code-method">newCall</span>(request).<span class="code-method">execute</span>()) {
+    JsonObject albumData = gson.<span class="code-method">fromJson</span>(albumResponse.body().<span class="code-method">string</span>(), JsonObject.<span class="code-keyword">class</span>);
+    <span class="code-keyword">for</span> (JsonElement a : albumData.<span class="code-method">getAsJsonArray</span>(<span class="code-string">"albums"</span>)) {
+      JsonObject album = a.<span class="code-method">getAsJsonObject</span>();
+      System.out.<span class="code-method">println</span>(album.<span class="code-method">get</span>(<span class="code-string">"title"</span>).<span class="code-method">getAsString</span>());
+      <span class="code-keyword">if</span> (album.<span class="code-method">has</span>(<span class="code-string">"tracks"</span>)) {
+        <span class="code-keyword">for</span> (JsonElement t : album.<span class="code-method">getAsJsonArray</span>(<span class="code-string">"tracks"</span>)) {
+          System.out.<span class="code-method">println</span>(t.<span class="code-method">getAsJsonObject</span>().<span class="code-method">get</span>(<span class="code-string">"title"</span>).<span class="code-method">getAsString</span>());
+        }
+      }
+    }
+  }
+}</code></pre>
         </div>
       </section>
     </main>
