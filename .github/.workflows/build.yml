@@ -1,9 +1,7 @@
-name: Build API docs
+name: Publish website
 on:
   push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+    branches: [gh-pages]
 jobs:
   test:
     timeout-minutes: 60
@@ -70,6 +68,11 @@ jobs:
           exit 1
       - name: Build docs
         run: monolith http://localhost:7100/swagger -o api.html
+      - name: Upload API docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: api.html
       - name: Backend debugging logs
         if: failure()
         shell: bash
@@ -94,10 +97,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: api-docs
+          path: .
       - name: Prepare site files
         run: |
           mkdir -p _site
-          cp website/index.html website/styles.css _site/
+          cp website/index.html website/styles.css api.html _site/
           cp -R website/screenshots _site/
       - uses: actions/upload-pages-artifact@v3
         with:
