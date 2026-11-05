@@ -301,51 +301,18 @@
       .code-comment a { 
         color: #999;
       }
+      /**
+       * API endpoints table
+       */
+      .api-endpoints {  }
+      table { border-collapse: collapse; width: 50% !important; }
+      th { text-align: left; border-bottom: 1px solid rgba(255,255,255,0.25) }
+      td { border-bottom: 1px solid rgba(255,255,255,0.25)}
+      th,td { padding: 0.5rem 0.25rem }
+      td { line-height: 1.25rem }
+
     </style>
-    <script>
-      window.onload = () => {
-      const appTypes = ["TypeScript", "iPhone", "Android"];
-      const compatibleTypes = ['Synology', 'QNAP', 'Subsonic'];
-      const appType = document.getElementById("app-type");
-      const compatibleType = document.getElementById("compatible-type");
-      let appIndex = 0;
-      let compatibleIndex = 0;
-
-      const appTabs = ["typescript", "ios", "android", "typescript"];
-      const tabButtons = document.querySelectorAll(".code-tab");
-
-      const showTab = (name) => {
-        tabButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-        ["typescript", "ios", "android"].forEach((t) => {
-          document.getElementById("code-" + t).hidden = t !== name;
-        });
-      };
-
-      let swapTimeout;
-      const rotation = setInterval(() => {
-        appType.classList.add("is-changing");
-
-        swapTimeout = setTimeout(() => {
-          compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
-          appIndex = (appIndex + 1) % appTypes.length;
-          appType.textContent = appTypes[appIndex];
-          compatibleType.textContent = compatibleTypes[compatibleIndex];
-          showTab(appTabs[appIndex]);
-          appType.classList.remove("is-changing");
-        }, 250);
-      }, 2500);
-
-      tabButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-          clearInterval(rotation);
-          clearTimeout(swapTimeout);
-          appType.classList.remove("is-changing");
-          showTab(button.dataset.tab);
-        });
-      });
-      
-      };
-    </script>
+    <script src="/api.js"></script>
   </head>
   <body>
     <header id="top">
@@ -417,6 +384,38 @@
       </section>
       <section>
         <h2>Create your dream <span class="rotating-word" id="app-type">TypeScript</span> music player</h2>
+        <ol style="list-style-type: none; margin: 0; padding: 0;">
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">All</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Administrative</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Accounts</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Albums</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Associations</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Tracks</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">Playlists</li>
+          <li style="display: inline-block; margin-right: 1rem; font-size: 0.75rem; font-weight: normal; text-transform: uppercase">SHOUTcast</li>
+        </ol>
+        <div style="display: flex; flex-direction: row; align-items: center;">
+          <div>
+            <table id="api-endpoints">
+              <thead>
+                <tr>
+                  <th>
+                      Endpoint
+                  </th>
+                  <th>Query parameters</th>
+                  <th>Posted payload</th>
+                  <th>Response format</th>
+                  <th>Error responses</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+          <div>
+
+
+
+
+
         <div class="code-tabs" role="tablist">
           <button type="button" class="code-tab active" role="tab" data-tab="typescript">TypeScript</button>
           <button type="button" class="code-tab" role="tab" data-tab="ios">iOS</button>
@@ -540,7 +539,9 @@ Request signIn = <span class="code-keyword">new</span> Request.<span class="code
     }
   }
 }</code></pre>
+</div>
         </div>
+      </div>
       </section>
     </main>
     <footer class="px-4 py-8 text-[0.9rem] text-slate-300">
