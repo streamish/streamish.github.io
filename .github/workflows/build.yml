@@ -54,7 +54,7 @@ jobs:
       - name: Wait for backend to start
         run: |
           LOG_FILE="$RUNNER_TEMP/backend.log"
-          EXPECTED='LOG [IndexerService] Finished test indexing'
+          EXPECTED='Finished test indexing'
           for i in $(seq 1 120); do
             if sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g' "$LOG_FILE" 2>/dev/null |
               grep -Fq "$EXPECTED"; then
