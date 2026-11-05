@@ -75,8 +75,8 @@ jobs:
       - name: Prepare site files
         run: |
           mkdir -p _site
-          cp website/index.html website/styles.css api.html _site/
-          cp -R website/screenshots _site/
+          cp index.html styles.css api.html _site/
+          cp -R screenshots _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
