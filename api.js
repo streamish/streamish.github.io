@@ -143,20 +143,6 @@ function rotateCodeTab() {
   }, 2500);
 }
 
-function escapeHtml(value) {
-  return String(value).replace(
-    /[&<>"']/g,
-    (char) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-      })[char],
-  );
-}
-
 function span(className, value) {
   return `<span class="${className}">${value}</span>`;
 }
@@ -179,33 +165,68 @@ function codeSpan(className, value) {
   return `<span class="${className}">${value}</span>`;
 }
 
-function formatSchema(schema, depth = 0) {
+function formatComment(description, depth, width) {
+  const indent = "  ".repeat(depth);
+  const available = Math.max(1, width - indent.length - 3);
+  const words = description.trim().split(/\s+/);
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    let remaining = word;
+    if (line && line.length + 1 + remaining.length > available) {
+      lines.push(line);
+      line = "";
+    }
+    while (remaining.length > available) {
+      lines.push(remaining.slice(0, available));
+      remaining = remaining.slice(available);
+    }
+    if (remaining) {
+      line += (line ? " " : "") + remaining;
+    }
+  }
+  if (line) lines.push(line);
+  return lines
+    .map((text) => `${indent}${codeSpan("code-comment", `// ${escapeHtml(text)}`)}`)
+    .join("\n");
+}
+
+function formatUnion(parts, depth) {
+  if (parts.length === 1) return parts[0];
+  const indent = "  ".repeat(depth + 1);
+  return `\n${parts.map((part) => `${indent}| ${part}`).join("\n")}`;
+}
+
+function formatSchema(schema, depth = 0, width = Infinity) {
   if (!schema) {
     return codeSpan("code-keyword", "unknown");
   }
   if (schema.$ref) {
-    return codeSpan("code-keyword", schema.$ref.split("/").pop());
+    return codeSpan("code-keyword", escapeHtml(schema.$ref.split("/").pop()));
   }
   if (schema.enum) {
-    return schema.enum
+    const values = schema.enum
       .map((value) => {
         const formatted =
           typeof value === "string" ? JSON.stringify(value) : String(value);
-        return codeSpan("code-string", formatted);
-      })
-      .join(" | ");
+        return codeSpan("code-string", escapeHtml(formatted));
+      });
+    return values.length ? formatUnion(values, depth) : codeSpan("code-keyword", "unknown");
   }
   for (const keyword of ["oneOf", "anyOf", "allOf"]) {
     if (schema[keyword]) {
-      const parts = schema[keyword].map((part) => formatSchema(part, depth));
-      return parts.join(keyword === "allOf" ? " & " : " | ");
+      const parts = schema[keyword].map((part) =>
+        formatSchema(part, keyword === "allOf" ? depth : depth + 1, width),
+      );
+      return keyword === "allOf" ? parts.join(" & ") : formatUnion(parts, depth);
     }
   }
   if (schema.type === "array" || schema.items) {
     return (
       codeSpan("code-keyword", "Array") +
       "&lt;" +
-      formatSchema(schema.items, depth) +
+      formatSchema(schema.items, depth, width) +
       "&gt;"
     );
   }
@@ -220,7 +241,7 @@ function formatSchema(schema, depth = 0) {
           "&lt;" +
           codeSpan("code-keyword", "string") +
           ", " +
-          formatSchema(schema.additionalProperties, depth) +
+          formatSchema(schema.additionalProperties, depth, width) +
           "&gt;"
         );
       }
@@ -237,23 +258,20 @@ function formatSchema(schema, depth = 0) {
       const propertyIndent = "  ".repeat(depth + 1);
       const optionalMark = required.has(name) ? "" : "?";
       const description = property.description
-        ? `${propertyIndent}${codeSpan(
-            "code-comment",
-            `// ${property.description.replace(/\s+/g, " ")}`,
-          )}\n`
+        ? `${formatComment(property.description, depth + 1, width)}\n`
         : "";
       return (
         description +
-        `${propertyIndent}${codeSpan("code-variable", name)}${optionalMark}: ` +
-        formatSchema(property, depth + 1)
+        `${propertyIndent}${codeSpan("code-variable", escapeHtml(name))}${optionalMark}: ` +
+        formatSchema(property, depth + 1, width)
       );
     });
     return `{\n${fields.join("\n")}\n${"  ".repeat(depth)}}`;
   }
   if (schema.type) {
-    const type = codeSpan("code-keyword", schema.type);
+    const type = codeSpan("code-keyword", escapeHtml(schema.type));
     return schema.nullable
-      ? `${type} | ${codeSpan("code-keyword", "null")}`
+      ? formatUnion([type, codeSpan("code-keyword", "null")], depth)
       : type;
   }
   return codeSpan("code-keyword", "unknown");
@@ -267,21 +285,21 @@ function getJsonSchema(content) {
   return content?.["application/json"]?.schema;
 }
 
-function formatEndpointRequestParameters(method, endpoint) {
+function formatEndpointRequestParameters(method, endpoint, width = Infinity) {
   const parameters = endpoint[method].parameters ?? [];
   return parameters
     .map((parameter) => {
       const schema =
         parameter.schema ?? parameter.content?.["application/json"]?.schema;
-      const type = formatSchema(schema);
+      const type = formatSchema(schema, 0, width);
       const required = parameter.required ? "required" : "optional";
       const description = parameter.description
-        ? `${span("code-comment", `// ${parameter.description.replace(/\s+/g, " ")}`)}\n`
+        ? `${formatComment(parameter.description, 0, width)}\n`
         : "";
 
       return (
         description +
-        `${span("code-variable", parameter.name)}: ` +
+        `${span("code-variable", escapeHtml(parameter.name))}: ` +
         `${span("code-keyword", type)} ` +
         span("code-comment", `(${required})`)
       );
@@ -289,9 +307,9 @@ function formatEndpointRequestParameters(method, endpoint) {
     .join("\n");
 }
 
-function formatEndpointRequestBody(method, endpoint) {
+function formatEndpointRequestBody(method, endpoint, width = Infinity) {
   const schema = getJsonSchema(endpoint[method].requestBody?.content);
-  const formatted = schema ? formatSchema(schema) : "";
+  const formatted = schema ? formatSchema(schema, 0, width) : "";
   return formatted ? formatted : "";
 }
 
@@ -322,11 +340,11 @@ function formatEndpointErrorCodes(method, endpoint) {
   }
   return [...codes]
     .sort((a, b) => a.localeCompare(b))
-    .map((code) => span("code-string", code))
+    .map((code) => span("code-string", escapeHtml(code)))
     .join("\n");
 }
 
-function formatEndpointResponse(method, endpoint) {
+function formatEndpointResponse(method, endpoint, width = Infinity) {
   const responses = endpoint[method].responses ?? {};
   const response =
     responses["200"] ??
@@ -334,13 +352,15 @@ function formatEndpointResponse(method, endpoint) {
     responses["202"] ??
     responses.default;
   const schema = getJsonSchema(response?.content);
-  const formatted = schema ? formatSchema(schema) : "";
+  const formatted = schema ? formatSchema(schema, 0, width) : "";
   return formatted ? span("code-keyword", formatted) : "";
 }
 
 function renderApiEndpoints(paths) {
   const list = document.getElementById("api-endpoints");
   const panels = {
+    route: document.getElementById("api-route"),
+    description: document.getElementById("api-description"),
     parameters: document.getElementById("api-parameters"),
     body: document.getElementById("api-request-body"),
     response: document.getElementById("api-response"),
@@ -366,30 +386,72 @@ function renderApiEndpoints(paths) {
     list.textContent = "No API endpoints found.";
     return;
   }
+  const context = document.createElement("canvas").getContext("2d");
+  function panelWidth(panel) {
+    const style = getComputedStyle(panel);
+    context.font = `${style.fontSize} ${style.fontFamily}`;
+    return Math.max(1, Math.floor((panel.clientWidth - 1) / context.measureText("M").width));
+  }
+  let selectedOperation;
+  function methodLabel(method) {
+    const label = document.createElement("span");
+    label.className = `api-method api-method--${method}`;
+    label.textContent = method.toUpperCase();
+    return label;
+  }
+  function renderDetails() {
+    if (!selectedOperation) return;
+    const { method, endpoint } = selectedOperation;
+    panels.parameters.innerHTML =
+      formatEndpointRequestParameters(method, endpoint, panelWidth(panels.parameters)) || "None.";
+    panels.body.innerHTML =
+      formatEndpointRequestBody(method, endpoint, panelWidth(panels.body)) || "None.";
+    panels.response.innerHTML =
+      formatEndpointResponse(method, endpoint, panelWidth(panels.response)) ||
+      "No response format documented.";
+    panels.errors.innerHTML =
+      formatEndpointErrorCodes(method, endpoint) ||
+      "No error codes documented.";
+  }
+
   const buttons = operations.map(({ endpoint, method }) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "api-endpoint";
-    button.textContent = `${method.toUpperCase()} ${endpoint.path}`;
+    button.append(methodLabel(method), document.createTextNode(` ${endpoint.path}`));
     button.setAttribute("aria-pressed", "false");
     button.addEventListener("click", () => {
       buttons.forEach((item) =>
         item.setAttribute("aria-pressed", String(item === button)),
       );
-      panels.parameters.innerHTML =
-        formatEndpointRequestParameters(method, endpoint) || "None.";
-      panels.body.innerHTML =
-        formatEndpointRequestBody(method, endpoint) || "None.";
-      panels.response.innerHTML =
-        formatEndpointResponse(method, endpoint) ||
-        "No response format documented.";
-      panels.errors.innerHTML =
-        formatEndpointErrorCodes(method, endpoint) ||
-        "No error codes documented.";
+      selectedOperation = { endpoint, method };
+      panels.route.replaceChildren(
+        document.createTextNode(`${endpoint.path} `),
+        methodLabel(method),
+      );
+      panels.route.hidden = false;
+      const description = endpoint[method].description ?? "";
+      panels.description.textContent = description;
+      panels.description.hidden = !description.trim();
+      renderDetails();
     });
     list.appendChild(button);
     return button;
   });
+  const observedWidths = new WeakMap();
+  const observer = new ResizeObserver((entries) => {
+    let changed = false;
+    for (const entry of entries) {
+      if (observedWidths.get(entry.target) !== entry.contentRect.width) {
+        observedWidths.set(entry.target, entry.contentRect.width);
+        changed = true;
+      }
+    }
+    if (changed) renderDetails();
+  });
+  [panels.parameters, panels.body, panels.response].forEach((panel) =>
+    observer.observe(panel),
+  );
   buttons[0].click();
 }
 

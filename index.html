@@ -292,7 +292,7 @@
 
       .api-browser {
         display: grid;
-        grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(10rem, 0.7fr);
+        grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.5fr) minmax(0, 1.5fr) max-content;
         gap: 1px;
         background: rgba(255, 255, 255, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -318,12 +318,48 @@
         color: #94a3b8;
       }
 
+      .api-panel .api-route {
+        font-size: 1rem;
+        color: #e2e8f0;
+        overflow-wrap: anywhere;
+      }
+
+      .api-method {
+        font-weight: bold;
+      }
+      .api-method--get { color: #7dd3fc; }
+      .api-method--post { color: #86efac; }
+      .api-method--patch { color: #fcd34d; }
+      .api-method--put { color: #fdba74; }
+      .api-method--delete { color: #fda4af; }
+
+      .api-panel .api-description {
+        margin: 0 0 1.5rem;
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        text-align: left;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
       .api-panel pre {
         margin: 0;
         color: #e2e8f0;
         font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+      }
+
+      .api-panel--errors {
+        width: max-content;
+        max-width: 100%;
+        box-sizing: border-box;
+        justify-self: start;
+      }
+
+      .api-panel--errors pre {
+        white-space: pre;
       }
 
       .api-endpoint-list {
@@ -368,6 +404,9 @@
       @media (max-width: 900px) {
         .api-browser {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .api-panel--errors pre {
+          white-space: pre-wrap;
         }
       }
 
@@ -462,6 +501,8 @@
             <div class="api-endpoint-list" id="api-endpoints">Loading endpoints...</div>
           </nav>
           <div class="api-panel">
+            <h3 class="api-route" id="api-route" hidden></h3>
+            <p class="api-description" id="api-description" hidden></p>
             <h3>Request inputs</h3>
             <h4>Query parameters</h4>
             <pre id="api-parameters">Select an endpoint.</pre>
@@ -472,7 +513,7 @@
             <h3>Response format</h3>
             <pre id="api-response">Select an endpoint.</pre>
           </div>
-          <div class="api-panel">
+          <div class="api-panel api-panel--errors">
             <h3>Error codes</h3>
             <pre id="api-errors">Select an endpoint.</pre>
           </div>
