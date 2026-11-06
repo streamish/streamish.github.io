@@ -85,10 +85,13 @@ function inlineSchemaRefs(openApi) {
 
 async function fetchOpenApiSpec() {
   const response = await fetch("./swagger.json");
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load API specification: HTTP ${response.status}`,
+    );
+  }
   const spec = await response.json();
-  console.log(spec);
   const expandedPaths = inlineSchemaRefs(spec);
-  console.log(expandedPaths);
   return Object.keys(expandedPaths)
     .filter((path) => path.startsWith("/api/"))
     .sort((a, b) => {
@@ -140,56 +143,22 @@ function rotateCodeTab() {
   }, 2500);
 }
 
-function formatSchema(schema, depth = 0) {
-  if (!schema) {
-    return "unknown";
-  }
-  const indent = "  ".repeat(depth);
-  if (schema.$ref) {
-    return schema.$ref.split("/").pop();
-  }
-  if (schema.enum) {
-    return schema.enum.map(formatValue).join(" | ");
-  }
-  for (const keyword of ["oneOf", "anyOf", "allOf"]) {
-    if (schema[keyword]) {
-      const parts = schema[keyword].map((part) => formatSchema(part, depth));
-      return parts.join(keyword === "allOf" ? " & " : " | ");
-    }
-  }
-  if (schema.type === "array" || schema.items) {
-    return `Array<${formatSchema(schema.items, depth)}>`;
-  }
-  if (schema.type === "object" || schema.properties) {
-    const properties = schema.properties ?? {};
-    const required = new Set(schema.required ?? []);
-    const entries = Object.entries(properties);
-    if (!entries.length) {
-      return schema.additionalProperties
-        ? `Record<string, ${formatSchema(schema.additionalProperties, depth)}>`
-        : "Record<string, unknown>";
-    }
-    const fields = entries.map(([name, property]) => {
-      const propertyIndent = "  ".repeat(depth + 1);
-      const optionalMark = required.has(name) ? "" : "?";
-      const description = property.description
-        ? `${propertyIndent}// ${property.description.replace(/\s+/g, " ")}\n`
-        : "";
-      return `${description}${propertyIndent}${name}${optionalMark}: ${formatSchema(
-        property,
-        depth + 1,
-      )}`;
-    });
-    return `{\n${fields.join("\n")}\n${"  ".repeat(depth)}}`;
-  }
-  if (schema.type) {
-    return schema.nullable ? `${schema.type} | null` : schema.type;
-  }
-  return "unknown";
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char],
+  );
 }
 
-function formatValue(value) {
-  return typeof value === "string" ? JSON.stringify(value) : String(value);
+function span(className, value) {
+  return `<span class="${className}">${value}</span>`;
 }
 
 function escapeHtml(value) {
@@ -206,34 +175,129 @@ function escapeHtml(value) {
   );
 }
 
+function codeSpan(className, value) {
+  return `<span class="${className}">${value}</span>`;
+}
+
+function formatSchema(schema, depth = 0) {
+  if (!schema) {
+    return codeSpan("code-keyword", "unknown");
+  }
+  if (schema.$ref) {
+    return codeSpan("code-keyword", schema.$ref.split("/").pop());
+  }
+  if (schema.enum) {
+    return schema.enum
+      .map((value) => {
+        const formatted =
+          typeof value === "string" ? JSON.stringify(value) : String(value);
+        return codeSpan("code-string", formatted);
+      })
+      .join(" | ");
+  }
+  for (const keyword of ["oneOf", "anyOf", "allOf"]) {
+    if (schema[keyword]) {
+      const parts = schema[keyword].map((part) => formatSchema(part, depth));
+      return parts.join(keyword === "allOf" ? " & " : " | ");
+    }
+  }
+  if (schema.type === "array" || schema.items) {
+    return (
+      codeSpan("code-keyword", "Array") +
+      "&lt;" +
+      formatSchema(schema.items, depth) +
+      "&gt;"
+    );
+  }
+  if (schema.type === "object" || schema.properties) {
+    const properties = schema.properties ?? {};
+    const required = new Set(schema.required ?? []);
+    const entries = Object.entries(properties);
+    if (!entries.length) {
+      if (schema.additionalProperties) {
+        return (
+          codeSpan("code-keyword", "Record") +
+          "&lt;" +
+          codeSpan("code-keyword", "string") +
+          ", " +
+          formatSchema(schema.additionalProperties, depth) +
+          "&gt;"
+        );
+      }
+      return (
+        codeSpan("code-keyword", "Record") +
+        "&lt;" +
+        codeSpan("code-keyword", "string") +
+        ", " +
+        codeSpan("code-keyword", "unknown") +
+        "&gt;"
+      );
+    }
+    const fields = entries.map(([name, property]) => {
+      const propertyIndent = "  ".repeat(depth + 1);
+      const optionalMark = required.has(name) ? "" : "?";
+      const description = property.description
+        ? `${propertyIndent}${codeSpan(
+            "code-comment",
+            `// ${property.description.replace(/\s+/g, " ")}`,
+          )}\n`
+        : "";
+      return (
+        description +
+        `${propertyIndent}${codeSpan("code-variable", name)}${optionalMark}: ` +
+        formatSchema(property, depth + 1)
+      );
+    });
+    return `{\n${fields.join("\n")}\n${"  ".repeat(depth)}}`;
+  }
+  if (schema.type) {
+    const type = codeSpan("code-keyword", schema.type);
+    return schema.nullable
+      ? `${type} | ${codeSpan("code-keyword", "null")}`
+      : type;
+  }
+  return codeSpan("code-keyword", "unknown");
+}
+
+function formatValue(value) {
+  return typeof value === "string" ? JSON.stringify(value) : String(value);
+}
+
 function getJsonSchema(content) {
   return content?.["application/json"]?.schema;
 }
 
 function formatEndpointRequestParameters(method, endpoint) {
   const parameters = endpoint[method].parameters ?? [];
-
   return parameters
     .map((parameter) => {
       const schema =
         parameter.schema ?? parameter.content?.["application/json"]?.schema;
-      const required = parameter.required ? "required" : "optional";
       const type = formatSchema(schema);
+      const required = parameter.required ? "required" : "optional";
       const description = parameter.description
-        ? `// ${parameter.description.replace(/\s+/g, " ")}\n`
+        ? `${span("code-comment", `// ${parameter.description.replace(/\s+/g, " ")}`)}\n`
         : "";
-      return `${description}${parameter.name}: ${type} (${required})`;
+
+      return (
+        description +
+        `${span("code-variable", parameter.name)}: ` +
+        `${span("code-keyword", type)} ` +
+        span("code-comment", `(${required})`)
+      );
     })
     .join("\n");
 }
 
 function formatEndpointRequestBody(method, endpoint) {
   const schema = getJsonSchema(endpoint[method].requestBody?.content);
-  return schema ? formatSchema(schema) : "";
+  const formatted = schema ? formatSchema(schema) : "";
+  return formatted ? formatted : "";
 }
 
 function formatEndpointErrorCodes(method, endpoint) {
   const codes = new Set();
+
   function collectEnums(schema) {
     if (!schema) return;
 
@@ -249,13 +313,17 @@ function formatEndpointErrorCodes(method, endpoint) {
   }
   const responses = endpoint[method].responses ?? {};
   for (const [status, response] of Object.entries(responses)) {
-    if (status !== "default" && !/^[45]\d\d$/.test(status)) continue;
+    if (status !== "default" && !/^[45]\d\d$/.test(status)) {
+      continue;
+    }
     for (const media of Object.values(response.content ?? {})) {
-      const messageSchema = media.schema?.properties?.message;
-      collectEnums(messageSchema);
+      collectEnums(media.schema?.properties?.message);
     }
   }
-  return [...codes].sort((a, b) => a.localeCompare(b)).join("\n");
+  return [...codes]
+    .sort((a, b) => a.localeCompare(b))
+    .map((code) => span("code-string", code))
+    .join("\n");
 }
 
 function formatEndpointResponse(method, endpoint) {
@@ -266,37 +334,74 @@ function formatEndpointResponse(method, endpoint) {
     responses["202"] ??
     responses.default;
   const schema = getJsonSchema(response?.content);
-  return schema ? formatSchema(schema) : "";
-}
-
-function formatEndpointPath(method, endpoint) {
-  return `<pre>${method ? method.toUpperCase() : ""} ${endpoint.path}</pre>`;
-}
-
-function formatEndpoint(endpoint) {
-  const method = Object.keys(endpoint).find((key) => key !== "path");
-  return `
-    <tr>
-        <td>${formatEndpointPath(method, endpoint)}</td>
-        <td><pre>${formatEndpointRequestParameters(method, endpoint)}</pre></td>
-        <td><pre>${formatEndpointRequestBody(method, endpoint)}</pre></td>
-        <td><pre>${formatEndpointResponse(method, endpoint)}</pre></td>
-        <td><pre>${formatEndpointErrorCodes(method, endpoint)}</pre></td>
-    </tr>`;
+  const formatted = schema ? formatSchema(schema) : "";
+  return formatted ? span("code-keyword", formatted) : "";
 }
 
 function renderApiEndpoints(paths) {
-  console.log("rendering api endpoints", paths);
-  const table = document.getElementById("api-endpoints");
-  const tbody = document.createElement("tbody");
-  tbody.innerHTML = paths.map((path) => formatEndpoint(path)).join("");
-  table.appendChild(tbody);
+  const list = document.getElementById("api-endpoints");
+  const panels = {
+    parameters: document.getElementById("api-parameters"),
+    body: document.getElementById("api-request-body"),
+    response: document.getElementById("api-response"),
+    errors: document.getElementById("api-errors"),
+  };
+  const methods = [
+    "get",
+    "put",
+    "post",
+    "delete",
+    "options",
+    "head",
+    "patch",
+    "trace",
+  ];
+  const operations = paths.flatMap((endpoint) =>
+    methods
+      .filter((method) => endpoint[method])
+      .map((method) => ({ endpoint, method })),
+  );
+  list.replaceChildren();
+  if (!operations.length) {
+    list.textContent = "No API endpoints found.";
+    return;
+  }
+  const buttons = operations.map(({ endpoint, method }) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "api-endpoint";
+    button.textContent = `${method.toUpperCase()} ${endpoint.path}`;
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => {
+      buttons.forEach((item) =>
+        item.setAttribute("aria-pressed", String(item === button)),
+      );
+      panels.parameters.innerHTML =
+        formatEndpointRequestParameters(method, endpoint) || "None.";
+      panels.body.innerHTML =
+        formatEndpointRequestBody(method, endpoint) || "None.";
+      panels.response.innerHTML =
+        formatEndpointResponse(method, endpoint) ||
+        "No response format documented.";
+      panels.errors.innerHTML =
+        formatEndpointErrorCodes(method, endpoint) ||
+        "No error codes documented.";
+    });
+    list.appendChild(button);
+    return button;
+  });
+  buttons[0].click();
 }
 
 window.onload = async () => {
   // load the swagger spec
-  fetchOpenApiSpec().then(renderApiEndpoints);
+  fetchOpenApiSpec()
+    .then(renderApiEndpoints)
+    .catch((error) => {
+      console.error("Unable to render API endpoints:", error);
+      document.getElementById("api-endpoints").textContent =
+        "Unable to load API endpoints.";
+    });
   // set up rotating content for the compatible app types and code sample
   rotateCompatibleAppTypes();
-  rotateCodeTab();
 };
