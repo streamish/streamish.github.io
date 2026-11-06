@@ -146,24 +146,14 @@ function rotateCompatibleAppTypes() {
 }
 
 function rotateCodeTab() {
-  const tabButtons = document.querySelectorAll(".code-tab");
   const appType = document.getElementById("app-type");
-  const appTabs = ["TypeScript", "iOS", "Android"];
+  const appTabs = ["Browser", "iOS", "Android", "Desktop"];
   let appIndex = 0;
-  const showTab = (name) => {
-    appType.textContent = name;
-    tabButtons.forEach((b) =>
-      b.classList.toggle("active", b.dataset.tab === name.toLowerCase()),
-    );
-    appTabs.forEach((t) => {
-      document.getElementById("code-" + t.toLowerCase()).hidden = t !== name;
-    });
-  };
   setInterval(() => {
     appType.classList.add("is-changing");
     setTimeout(() => {
       appIndex = (appIndex + 1) % appTabs.length;
-      showTab(appTabs[appIndex]);
+      appType.textContent = appTabs[appIndex];
       appType.classList.remove("is-changing");
     }, 250);
   }, 2500);
@@ -582,5 +572,10 @@ window.onload = async () => {
       if (list) list.textContent = "Unable to load API endpoints.";
     });
   // set up rotating content for the compatible app types and code sample
-  if (document.getElementById("compatible-type")) rotateCompatibleAppTypes();
+  if (document.getElementById("compatible-type")) {
+    rotateCompatibleAppTypes();
+  }
+  if (document.getElementById("app-type")) {
+    rotateCodeTab();
+  }
 };
