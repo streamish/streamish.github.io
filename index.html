@@ -84,20 +84,20 @@
       </ol>
       <section class="docker-quick-start" aria-labelledby="docker-quick-start-title">
         <h2 id="docker-quick-start-title">Get started with Docker Compose</h2>
-        <pre><code>services:
-  streamish:
-    image: streamish/music
-    ports:
-      - "8000:8000"
-    volumes:
-      - /my/music:/music:ro
-      - /my/data:/data:rw
-    environment:
-      DEFAULT_ADMIN_USERNAME: admin
-      DEFAULT_ADMIN_PASSWORD: admin
-      # SYNOLOGY_AUDIOSTATION_ENABLED: true
-      # QNAP_MUSIC_STATION_ENABLED: true
-      # SUBSONIC_ENABLED: true</code></pre>
+        <pre><code><span class="code-keyword">services</span>:
+  <span class="code-keyword">streamish</span>:
+    <span class="code-keyword">image</span>: <span class="code-function">streamish/music</span>
+    <span class="code-keyword">ports</span>:
+      - <span class="code-string">"8000:8000"</span>
+    <span class="code-keyword">volumes</span>:
+      - <span class="code-string">/my/music:/music:ro</span>
+      - <span class="code-string">/my/data:/data:rw</span>
+    <span class="code-keyword">environment</span>:
+      <span class="code-variable">DEFAULT_ADMIN_USERNAME</span>: <span class="code-function">admin</span>
+      <span class="code-variable">DEFAULT_ADMIN_PASSWORD</span>: <span class="code-function">admin</span>
+      <span class="code-comment"># SYNOLOGY_AUDIOSTATION_ENABLED: true</span>
+      <span class="code-comment"># QNAP_MUSIC_STATION_ENABLED: true</span>
+      <span class="code-comment"># SUBSONIC_ENABLED: true</span></code></pre>
       </section>
     </header>
     <main>
