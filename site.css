@@ -206,10 +206,10 @@ footer {
   text-align: center;
 }
 .app-screenshots--phones li {
-  transition: opacity 0.25s ease;
+  transition: transform 0.6s ease;
 }
-.app-screenshots--phones li.is-changing {
-  opacity: 0;
+.app-screenshots--phones img {
+  transition: width 0.6s ease, transform 0.6s ease;
 }
 .app-screenshots--web li {
   width: 100%;
@@ -228,13 +228,17 @@ footer {
   .app-screenshots--phones li {
     flex-basis: 33.333%;
   }
-  .app-screenshots--phones li:nth-child(2) img {
+  .app-screenshots--phones li {
     position: relative;
+  }
+  .app-screenshots--phones li.is-center {
     z-index: 1;
-    width: 116%;
+  }
+  .app-screenshots--phones li.is-center img {
+    width: 132%;
     max-width: none;
-    /* grows 16% wider; lift by half the height difference (0.16 / 1.16 / 2) */
-    transform: translateY(-6.9%);
+    /* lift by half the height difference (0.32 / 1.32 / 2) */
+    transform: translateY(-12%);
   }
 }
 
