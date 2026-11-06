@@ -187,6 +187,7 @@ footer {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: center;
 }
 .app-screenshots li {
   display: flex;
@@ -224,6 +225,20 @@ footer {
 .app-screenshots--web img {
   border-radius: 0.75rem;
   box-shadow: 0 0 2rem rgba(0, 0, 0, 0.35), 0 0 5rem rgba(120, 160, 255, 0.2);
+}
+.app-screenshots.screenshot-rotator {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.screenshot-rotator li {
+  grid-area: 1 / 1;
+}
+.screenshot-rotator img {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.screenshot-rotator img.is-active {
+  opacity: 1;
 }
 
 @media (max-width: 1200px) {
