@@ -82,6 +82,23 @@
           </a>
         </li>
       </ol>
+      <section class="docker-quick-start" aria-labelledby="docker-quick-start-title">
+        <h2 id="docker-quick-start-title">Get started with Docker Compose</h2>
+        <pre><code>services:
+  streamish:
+    image: streamish/music
+    ports:
+      - "8000:8000"
+    volumes:
+      - /my/music:/music:ro
+      - /my/data:/data:rw
+    environment:
+      DEFAULT_ADMIN_USERNAME: admin
+      DEFAULT_ADMIN_PASSWORD: admin
+      # SYNOLOGY_AUDIOSTATION_ENABLED: true
+      # QNAP_MUSIC_STATION_ENABLED: true
+      # SUBSONIC_ENABLED: true</code></pre>
+      </section>
     </header>
     <main>
       <section>
