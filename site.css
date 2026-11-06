@@ -206,7 +206,11 @@ footer {
   text-align: center;
 }
 .app-screenshots--phones li {
+  position: relative;
   transition: transform 0.6s ease;
+}
+.app-screenshots--phones li.is-center {
+  z-index: 1;
 }
 .app-screenshots--phones img {
   transition: width 0.6s ease, transform 0.6s ease;
@@ -227,12 +231,6 @@ footer {
   }
   .app-screenshots--phones li {
     flex-basis: 33.333%;
-  }
-  .app-screenshots--phones li {
-    position: relative;
-  }
-  .app-screenshots--phones li.is-center {
-    z-index: 1;
   }
   .app-screenshots--phones li.is-center img {
     width: 132%;

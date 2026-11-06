@@ -108,9 +108,11 @@ async function fetchOpenApiSpec() {
 function rotateCompatibleAppTypes() {
   const compatibleTypes = ["Synology", "QNAP", "Subsonic"];
   const compatibleType = document.getElementById("compatible-type");
-  const slots = [...document.querySelectorAll(".app-screenshots--phones li")];
+  const slots = compatibleTypes.map((type) =>
+    document.querySelector(`.app-screenshots--phones li[data-type="${type}"]`),
+  );
   let compatibleIndex = 0;
-  // slot i is phone i; the active phone is placed in the middle via flex order
+  // the active phone is placed in the middle via flex order
   const layout = () => {
     slots.forEach((slot, i) => {
       const order = (i - compatibleIndex + 1 + slots.length) % slots.length;
