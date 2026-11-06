@@ -108,34 +108,35 @@ async function fetchOpenApiSpec() {
 function rotateCompatibleAppTypes() {
   const compatibleTypes = ["Synology", "QNAP", "Subsonic"];
   const compatibleType = document.getElementById("compatible-type");
-  const phones = [
-    { label: "Synology DS Audio", src: "/screenshots/ds-audio-iphone.png", alt: "Synology DS Audio application on iPhone" },
-    { label: "QNAP Qmusic", src: "/screenshots/qmusic-iphone.png", alt: "QNAP Qmusic application on iPhone" },
-    { label: "Subsonic apps", src: "/screenshots/substreamer-iphone.png", alt: "Substreamer application on iPhone" },
-  ];
-  const slots = document.querySelectorAll(".app-screenshots--phones li");
-  const showPhones = (active) => {
-    slots.forEach((slot, slotIndex) => {
-      const phone =
-        phones[(active + slotIndex - 1 + phones.length) % phones.length];
-      slot.querySelector("span").textContent = phone.label;
-      const img = slot.querySelector("img");
-      img.src = phone.src;
-      img.alt = phone.alt;
+  const slots = [...document.querySelectorAll(".app-screenshots--phones li")];
+  let compatibleIndex = 0;
+  // slot i is phone i; the active phone is placed in the middle via flex order
+  const layout = () => {
+    slots.forEach((slot, i) => {
+      const order = (i - compatibleIndex + 1 + slots.length) % slots.length;
+      slot.style.order = order;
+      slot.classList.toggle("is-center", order === 1);
     });
   };
-  let compatibleIndex = 0;
-  if (slots.length === phones.length) showPhones(compatibleIndex);
+  layout();
   setInterval(() => {
     compatibleType.classList.add("is-changing");
-    slots.forEach((slot) => slot.classList.add("is-changing"));
     setTimeout(() => {
-      compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
-      compatibleType.textContent = compatibleTypes[compatibleIndex];
-      if (slots.length === phones.length) showPhones(compatibleIndex);
-      slots.forEach((slot) => slot.classList.remove("is-changing"));
+      compatibleType.textContent =
+        compatibleTypes[(compatibleIndex + 1) % compatibleTypes.length];
       compatibleType.classList.remove("is-changing");
     }, 250);
+    const before = slots.map((slot) => slot.getBoundingClientRect().left);
+    compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
+    layout();
+    slots.forEach((slot, i) => {
+      const dx = before[i] - slot.getBoundingClientRect().left;
+      slot.style.transition = "none";
+      slot.style.transform = `translateX(${dx}px)`;
+      slot.getBoundingClientRect();
+      slot.style.transition = "";
+      slot.style.transform = "";
+    });
   }, 2500);
 }
 
