@@ -123,13 +123,13 @@ function rotateCompatibleAppTypes() {
   layout();
   setInterval(() => {
     compatibleType.classList.add("is-changing");
+    compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
+    const activeType = compatibleTypes[compatibleIndex];
     setTimeout(() => {
-      compatibleType.textContent =
-        compatibleTypes[(compatibleIndex + 1) % compatibleTypes.length];
+      compatibleType.textContent = activeType;
       compatibleType.classList.remove("is-changing");
     }, 250);
     const before = slots.map((slot) => slot.getBoundingClientRect().left);
-    compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
     // swap the incoming phone with the one currently in the middle
     const from = positions.indexOf(slots[compatibleIndex]);
     [positions[from], positions[1]] = [positions[1], positions[from]];
