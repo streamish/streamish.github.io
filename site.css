@@ -71,6 +71,8 @@ header h1 {
 }
 header h1 img { 
   margin-right: 1rem;
+  height: 1em;
+  vertical-align: middle;
 }
 header p {
   font-weight: normal;
