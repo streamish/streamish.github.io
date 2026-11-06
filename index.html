@@ -53,13 +53,25 @@
     <title>Streamish — Your Music, Your Server</title>
     <link rel="stylesheet" href="/site.css" />
     <script src="/api.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var imgs = document.querySelectorAll("#screenshot-rotator img");
+        if (imgs.length < 2) return;
+        var current = 0;
+        setInterval(function () {
+          imgs[current].classList.remove("is-active");
+          current = (current + 1) % imgs.length;
+          imgs[current].classList.add("is-active");
+        }, 4000);
+      });
+    </script>
   </head>
   <body>
     <header id="top">
       <h1><img src="/images/logo-dark.png" alt="" /> Streamish Music</h1>
       <p>
-        Free and private self-hosted music server for multiple users, compatible
-        with lots of great Android and iOS apps and web browsers.
+        Free and private self-hosted music server for multiple users with
+        browser interface and compatible with multiple Android and iOS apps.
       </p>
       <ol>
         <li>
@@ -129,11 +141,89 @@
       </section>
       <section>
         <h2>Full-featured, responsive web interface</h2>
-        <ul class="app-screenshots app-screenshots--web">
+        <ul class="app-screenshots app-screenshots--web screenshot-rotator" id="screenshot-rotator">
+          <li>
+            <img class="is-active"
+              src="/screenshots/Screenshot 2026-11-06 at 09-29-58 Recently Added.png"
+              alt="Streamish Music web interface, Recently Added, light mode"
+            />
+          </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-04 at 12-31-49 Albums.png"
-              alt="Streamish Music web browser interface screenshot"
+              src="/screenshots/Screenshot 2026-11-06 at 09-30-26 Recently Added.png"
+              alt="Streamish Music web interface, Recently Added, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-30-40 Recently Added.png"
+              alt="Streamish Music web interface, Recently Added, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-30-46 Recently Added.png"
+              alt="Streamish Music web interface, Recently Added, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-31-11 Album Artists Christina Aguilera.png"
+              alt="Streamish Music web interface, Album Artists Christina Aguilera, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-31-16 Album Artists Christina Aguilera.png"
+              alt="Streamish Music web interface, Album Artists Christina Aguilera, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-31-41 Tracks.png"
+              alt="Streamish Music web interface, Tracks, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-31-47 Tracks.png"
+              alt="Streamish Music web interface, Tracks, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-32-02 SHOUTcast.png"
+              alt="Streamish Music web interface, SHOUTcast, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-32-07 SHOUTcast.png"
+              alt="Streamish Music web interface, SHOUTcast, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-39-02 Folders.png"
+              alt="Streamish Music web interface, Folders, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-39-08 Folders.png"
+              alt="Streamish Music web interface, Folders, dark mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-39-36 Server Administration.png"
+              alt="Streamish Music web interface, Server Administration, light mode"
+            />
+          </li>
+          <li>
+            <img
+              src="/screenshots/Screenshot 2026-11-06 at 09-39-41 Server Administration.png"
+              alt="Streamish Music web interface, Server Administration, dark mode"
             />
           </li>
         </ul>
