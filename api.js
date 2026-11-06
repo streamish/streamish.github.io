@@ -356,8 +356,23 @@ function formatEndpointResponse(method, endpoint, width = Infinity) {
   return formatted ? span("code-keyword", formatted) : "";
 }
 
+function operationCategories(operation) {
+  const categories = [];
+  if (operation.tags?.includes("Admin APIs")) categories.push("Administrative");
+  const controller = /^Api(.+)Controller_/.exec(operation.operationId ?? "")?.[1];
+  if (controller) {
+    categories.push(controller === "Shoutcast"
+      ? "SHOUTcast"
+      : controller.replace(/([a-z])([A-Z])/g, "$1 $2"));
+  } else {
+    categories.push("Other");
+  }
+  return categories;
+}
+
 function renderApiEndpoints(paths) {
-  const list = document.getElementById("api-endpoints");
+  const list = document.getElementById("api-endpoint-list");
+  const filters = document.getElementById("api-filters");
   const panels = {
     route: document.getElementById("api-route"),
     description: document.getElementById("api-description"),
@@ -381,9 +396,8 @@ function renderApiEndpoints(paths) {
       .filter((method) => endpoint[method])
       .map((method) => ({ endpoint, method })),
   );
-  list.replaceChildren();
   if (!operations.length) {
-    list.textContent = "No API endpoints found.";
+    if (list) list.textContent = "No API endpoints found.";
     return;
   }
   const context = document.createElement("canvas").getContext("2d");
@@ -414,30 +428,78 @@ function renderApiEndpoints(paths) {
       "No error codes documented.";
   }
 
-  const buttons = operations.map(({ endpoint, method }) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "api-endpoint";
-    button.append(methodLabel(method), document.createTextNode(` ${endpoint.path}`));
-    button.setAttribute("aria-pressed", "false");
-    button.addEventListener("click", () => {
-      buttons.forEach((item) =>
-        item.setAttribute("aria-pressed", String(item === button)),
+  function selectOperation(index) {
+    const { endpoint, method } = operations[index];
+    if (list) {
+      list.querySelectorAll("button").forEach((button) =>
+        button.setAttribute("aria-pressed", String(button.dataset.index === String(index))),
       );
-      selectedOperation = { endpoint, method };
-      panels.route.replaceChildren(
-        document.createTextNode(`${endpoint.path} `),
-        methodLabel(method),
-      );
-      panels.route.hidden = false;
-      const description = endpoint[method].description ?? "";
-      panels.description.textContent = description;
-      panels.description.hidden = !description.trim();
-      renderDetails();
+    }
+    selectedOperation = { endpoint, method };
+    panels.route.replaceChildren(
+      document.createTextNode(`${endpoint.path} `),
+      methodLabel(method),
+    );
+    panels.route.hidden = false;
+    const description = endpoint[method].description ?? "";
+    panels.description.textContent = description;
+    panels.description.hidden = !description.trim();
+    renderDetails();
+  }
+
+  if (list && filters) {
+    const categoryNames = new Set(
+      operations.flatMap(({ endpoint, method }) => operationCategories(endpoint[method])),
+    );
+    const categories = [
+      "All",
+      ...[...categoryNames].sort((a, b) =>
+        a === "Administrative" ? -1 : b === "Administrative" ? 1 : a.localeCompare(b),
+      ),
+    ];
+    let activeCategory = "All";
+    let selectedIndex = 0;
+    function renderList() {
+      list.replaceChildren();
+      const indexes = operations.map((_, index) => index).filter((index) => {
+        const { endpoint, method } = operations[index];
+        return activeCategory === "All" ||
+          operationCategories(endpoint[method]).includes(activeCategory);
+      });
+      if (!indexes.includes(selectedIndex)) selectedIndex = indexes[0];
+      indexes.forEach((index) => {
+        const { endpoint, method } = operations[index];
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "api-list-item";
+        button.dataset.index = String(index);
+        button.append(methodLabel(method), document.createTextNode(` ${endpoint.path}`));
+        button.addEventListener("click", () => {
+          selectedIndex = index;
+          selectOperation(index);
+        });
+        list.appendChild(button);
+      });
+      selectOperation(selectedIndex);
+    }
+    filters.replaceChildren();
+    categories.forEach((category) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "api-filter";
+      button.textContent = category;
+      button.setAttribute("aria-pressed", String(category === activeCategory));
+      button.addEventListener("click", () => {
+        activeCategory = category;
+        filters.querySelectorAll("button").forEach((item) =>
+          item.setAttribute("aria-pressed", String(item === button)),
+        );
+        renderList();
+      });
+      filters.appendChild(button);
     });
-    list.appendChild(button);
-    return button;
-  });
+    renderList();
+  }
   const observedWidths = new WeakMap();
   const observer = new ResizeObserver((entries) => {
     let changed = false;
@@ -452,7 +514,6 @@ function renderApiEndpoints(paths) {
   [panels.parameters, panels.body, panels.response].forEach((panel) =>
     observer.observe(panel),
   );
-  buttons[0].click();
 }
 
 window.onload = async () => {
@@ -461,9 +522,9 @@ window.onload = async () => {
     .then(renderApiEndpoints)
     .catch((error) => {
       console.error("Unable to render API endpoints:", error);
-      document.getElementById("api-endpoints").textContent =
-        "Unable to load API endpoints.";
+      const list = document.getElementById("api-endpoint-list");
+      if (list) list.textContent = "Unable to load API endpoints.";
     });
   // set up rotating content for the compatible app types and code sample
-  rotateCompatibleAppTypes();
+  if (document.getElementById("compatible-type")) rotateCompatibleAppTypes();
 };

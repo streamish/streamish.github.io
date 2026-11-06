@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Explore the Streamish Music API documentation." />
+    <title>API Documentation — Streamish Music</title>
+    <link rel="icon" href="/icons/light/favicon.ico" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/icons/dark/favicon.ico" media="(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/site.css" />
+    <script src="/api.js"></script>
+  </head>
+  <body>
+    <header id="top">
+      <h1><img src="/images/logo-dark.png" alt="" style="height: 1em; vertical-align: middle;" /> Streamish Music</h1>
+      <p>Free and private self-hosted music server for multiple users, compatible with lots of great Android and iOS apps and web browsers.</p>
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="https://github.com/Streamish" target="_blank" rel="noopener noreferrer">View on GitHub</a></li>
+      </ol>
+    </header>
+    <main>
+      <section class="api-section">
+        <h2>API documentation</h2>
+        <div class="api-docs">
+          <nav class="api-panel api-sidebar" aria-label="API endpoints">
+            <h3>Filter endpoints</h3>
+            <div class="api-filters" id="api-filters" aria-label="Endpoint categories"></div>
+            <h3>Endpoints</h3>
+            <div class="api-list" id="api-endpoint-list" aria-live="polite">Loading endpoints...</div>
+          </nav>
+          <div class="api-browser">
+            <div class="api-panel">
+              <h3 class="api-route" id="api-route" hidden></h3>
+              <p class="api-description" id="api-description" hidden></p>
+              <h3>Request inputs</h3>
+              <h4>Query parameters</h4>
+              <pre id="api-parameters">Select an endpoint.</pre>
+              <h4>Request body</h4>
+              <pre id="api-request-body">Select an endpoint.</pre>
+            </div>
+            <div class="api-panel">
+              <h3>Response format</h3>
+              <pre id="api-response">Select an endpoint.</pre>
+            </div>
+            <div class="api-panel api-panel--errors">
+              <h3>Error codes</h3>
+              <pre id="api-errors">Select an endpoint.</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <div>&copy; 2026 All Rights Reserved. Available under MIT license.</div>
+    </footer>
+  </body>
+</html>
