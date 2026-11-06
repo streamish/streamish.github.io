@@ -116,6 +116,7 @@ header li a:hover {
   border-radius: 0.75rem;
   background: rgba(15, 23, 42, 0.8);
   text-align: left;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.35), 0 0 5rem rgba(120, 160, 255, 0.2);
 }
 .docker-quick-start h2 {
   margin: 0;
@@ -219,6 +220,10 @@ footer {
 }
 .app-screenshots--web li {
   width: 100%;
+}
+.app-screenshots--web img {
+  border-radius: 0.75rem;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.35), 0 0 5rem rgba(120, 160, 255, 0.2);
 }
 
 @media (max-width: 1200px) {
@@ -372,6 +377,7 @@ footer {
   grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.35), 0 0 5rem rgba(120, 160, 255, 0.2);
 }
 
 .api-sidebar {
