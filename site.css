@@ -359,7 +359,7 @@ footer {
   display: grid;
   grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .api-sidebar {
