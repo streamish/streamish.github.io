@@ -205,6 +205,12 @@ footer {
 .app-screenshots--phones span {
   text-align: center;
 }
+.app-screenshots--phones li {
+  transition: opacity 0.25s ease;
+}
+.app-screenshots--phones li.is-changing {
+  opacity: 0;
+}
 .app-screenshots--web li {
   width: 100%;
 }
@@ -227,6 +233,8 @@ footer {
     z-index: 1;
     width: 116%;
     max-width: none;
+    /* grows 16% wider; lift by half the height difference (0.16 / 1.16 / 2) */
+    transform: translateY(-6.9%);
   }
 }
 
