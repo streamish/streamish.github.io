@@ -11,6 +11,42 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: music-server/package-lock.json
+      - name: Install API dependencies
+        run: npm ci
+        working-directory: music-server
+      - name: Refresh OpenAPI definition
+        run: |
+          set -euo pipefail
+          cd music-server
+          setsid npm run start:test > /tmp/streamish-api.log 2>&1 &
+          api_pid=$!
+          cleanup() {
+            kill -- "-$api_pid" 2>/dev/null || true
+            wait "$api_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:7100/swagger.json \
+              -o ../website/swagger.json; then
+              node -e "JSON.parse(require('node:fs').readFileSync('../website/swagger.json', 'utf8'))"
+              exit 0
+            fi
+            if ! kill -0 "$api_pid" 2>/dev/null; then
+              cat /tmp/streamish-api.log
+              exit 1
+            fi
+            sleep 2
+          done
+
+          cat /tmp/streamish-api.log
+          echo "Timed out waiting for the API Swagger definition."
+          exit 1
       - name: Prepare site files
         run: |
           mkdir -p _site
