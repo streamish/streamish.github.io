@@ -55,14 +55,49 @@
     <script src="/api.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        var imgs = document.querySelectorAll("#screenshot-rotator img");
-        if (imgs.length < 2) return;
-        var current = 0;
-        setInterval(function () {
-          imgs[current].classList.remove("is-active");
-          current = (current + 1) % imgs.length;
-          imgs[current].classList.add("is-active");
-        }, 4000);
+        var rotator = document.getElementById("screenshot-rotator");
+        var controls = document.getElementById("screenshot-controls");
+        var slides = Array.from(rotator.querySelectorAll("li")).map(function (element) {
+          var src = element.querySelector("img").getAttribute("src");
+          var match = src.match(/\/(desktop|mobile)-(.+)-(light|dark)\.png$/);
+          if (!match) throw new Error("Invalid screenshot filename: " + src);
+          return { element: element, device: match[1], screen: match[2], theme: match[3] };
+        });
+        var active = slides.find(function (slide) { return slide.element.classList.contains("is-active"); });
+        var matching = [];
+        var timer;
+
+        function show(slide) {
+          if (active) active.element.classList.remove("is-active");
+          active = slide;
+          active.element.classList.add("is-active");
+          rotator.classList.toggle("is-mobile", active.device === "mobile");
+        }
+
+        function selectSlides() {
+          var device = controls.elements.device.value;
+          var theme = controls.elements.theme.value;
+          matching = slides.filter(function (slide) {
+            return slide.device === device && slide.theme === theme;
+          });
+          if (!matching.length) {
+            console.error("No screenshots found for " + device + " " + theme);
+            return;
+          }
+          var sameScreen = matching.find(function (slide) {
+            return active && slide.screen === active.screen;
+          });
+          show(sameScreen || matching[0]);
+          clearInterval(timer);
+          if (matching.length > 1) {
+            timer = setInterval(function () {
+              show(matching[(matching.indexOf(active) + 1) % matching.length]);
+            }, 4000);
+          }
+        }
+
+        controls.addEventListener("change", selectSlides);
+        selectSlides();
       });
     </script>
   </head>
@@ -141,92 +176,190 @@
       </section>
       <section>
         <h2>Full-featured, responsive web interface</h2>
+        <form class="screenshot-controls" id="screenshot-controls" aria-label="Screenshot display options">
+          <fieldset>
+            <legend>Device</legend>
+            <label><input type="radio" name="device" value="desktop" checked /><span>Desktop</span></label>
+            <label><input type="radio" name="device" value="mobile" /><span>Mobile</span></label>
+          </fieldset>
+          <fieldset>
+            <legend>Appearance</legend>
+            <label><input type="radio" name="theme" value="light" checked /><span>Light</span></label>
+            <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+          </fieldset>
+        </form>
+        <div class="screenshot-stage">
         <ul class="app-screenshots app-screenshots--web screenshot-rotator" id="screenshot-rotator">
-          <li>
-            <img class="is-active"
-              src="/screenshots/Screenshot 2026-11-06 at 09-29-58 Recently Added.png"
+          <li class="is-active">
+            <img
+              src="/screenshots/desktop-recently-added-light.png"
               alt="Streamish Music web interface, Recently Added, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-30-26 Recently Added.png"
+              src="/screenshots/desktop-recently-added-dark.png"
               alt="Streamish Music web interface, Recently Added, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-recently-added-light.png"
+              alt="Streamish Music mobile interface, Recently Added, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-recently-added-dark.png"
+              alt="Streamish Music mobile interface, Recently Added, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-30-40 Recently Added.png"
+              src="/screenshots/desktop-recently-added-2-light.png"
               alt="Streamish Music web interface, Recently Added, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-30-46 Recently Added.png"
+              src="/screenshots/desktop-recently-added-2-dark.png"
               alt="Streamish Music web interface, Recently Added, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-recently-added-2-light.png"
+              alt="Streamish Music mobile interface, Recently Added, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-recently-added-2-dark.png"
+              alt="Streamish Music mobile interface, Recently Added, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 10-07-46 Album Artists Christina Aguilera.png"
+              src="/screenshots/desktop-album-artists-light.png"
               alt="Streamish Music web interface, Album Artists Christina Aguilera, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 10-07-52 Album Artists Christina Aguilera.png"
+              src="/screenshots/desktop-album-artists-dark.png"
               alt="Streamish Music web interface, Album Artists Christina Aguilera, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-album-artists-light.png"
+              alt="Streamish Music mobile interface, Album Artists, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-album-artists-dark.png"
+              alt="Streamish Music mobile interface, Album Artists, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 10-08-21 Tracks.png"
+              src="/screenshots/desktop-tracks-light.png"
               alt="Streamish Music web interface, Tracks, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 10-08-32 Tracks.png"
+              src="/screenshots/desktop-tracks-dark.png"
               alt="Streamish Music web interface, Tracks, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-tracks-light.png"
+              alt="Streamish Music mobile interface, Tracks, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-tracks-dark.png"
+              alt="Streamish Music mobile interface, Tracks, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-32-02 SHOUTcast.png"
+              src="/screenshots/desktop-shoutcast-light.png"
               alt="Streamish Music web interface, SHOUTcast, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-32-07 SHOUTcast.png"
+              src="/screenshots/desktop-shoutcast-dark.png"
               alt="Streamish Music web interface, SHOUTcast, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-shoutcast-light.png"
+              alt="Streamish Music mobile interface, SHOUTcast, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-shoutcast-dark.png"
+              alt="Streamish Music mobile interface, SHOUTcast, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-58-15 Folders.png"
+              src="/screenshots/desktop-folders-light.png"
               alt="Streamish Music web interface, Folders, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-58-21 Folders.png"
+              src="/screenshots/desktop-folders-dark.png"
               alt="Streamish Music web interface, Folders, dark mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-folders-light.png"
+              alt="Streamish Music mobile interface, Folders, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-folders-dark.png"
+              alt="Streamish Music mobile interface, Folders, dark mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-56-56 Server Administration.png"
+              src="/screenshots/desktop-administration-light.png"
               alt="Streamish Music web interface, Server Administration, light mode"
             />
           </li>
           <li>
             <img
-              src="/screenshots/Screenshot 2026-11-06 at 09-57-02 Server Administration.png"
+              src="/screenshots/desktop-administration-dark.png"
               alt="Streamish Music web interface, Server Administration, dark mode"
             />
           </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-administration-light.png"
+              alt="Streamish Music mobile interface, Server Administration, light mode"
+            />
+          </li>
+          <li class="screenshot-mobile">
+            <img
+              src="/screenshots/mobile-administration-dark.png"
+              alt="Streamish Music mobile interface, Server Administration, dark mode"
+            />
+          </li>
         </ul>
+        </div>
       </section>
       <section class="api-section">
         <h2>Create your dream <span class="rotating-word" id="app-type">TypeScript</span> music player</h2>
