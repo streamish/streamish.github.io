@@ -457,9 +457,14 @@ function renderApiEndpoints(paths) {
   function selectOperation(index) {
     const { endpoint, method } = operations[index];
     if (list) {
-      list.querySelectorAll("button").forEach((button) =>
-        button.setAttribute("aria-pressed", String(button.dataset.index === String(index))),
-      );
+      list.querySelectorAll("button").forEach((button) => {
+        const pressed = button.dataset.index === String(index);
+        button.setAttribute("aria-pressed", String(pressed));
+        if (pressed) {
+          const top = button.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
+          list.scrollTop = top - (list.clientHeight - button.offsetHeight) / 2;
+        }
+      });
     }
     selectedOperation = { endpoint, method };
     panels.route.replaceChildren(
@@ -484,7 +489,18 @@ function renderApiEndpoints(paths) {
       ),
     ];
     let activeCategory = "All";
-    let selectedIndex = 0;
+    function operationHash(index) {
+      const { endpoint } = operations[index];
+      return endpoint.path;
+    }
+    function indexFromHash() {
+      let hash = location.hash.slice(1);
+      try {
+        hash = decodeURIComponent(hash);
+      } catch {}
+      return operations.findIndex((_, index) => operationHash(index) === hash);
+    }
+    let selectedIndex = Math.max(0, indexFromHash());
     function renderList() {
       list.replaceChildren();
       const indexes = operations.map((_, index) => index).filter((index) => {
@@ -503,6 +519,7 @@ function renderApiEndpoints(paths) {
         button.addEventListener("click", () => {
           selectedIndex = index;
           selectOperation(index);
+          history.replaceState(null, "", `#${operationHash(index)}`);
         });
         list.appendChild(button);
       });
@@ -525,6 +542,19 @@ function renderApiEndpoints(paths) {
       filters.appendChild(button);
     });
     renderList();
+    window.addEventListener("hashchange", () => {
+      const index = indexFromHash();
+      if (index < 0) return;
+      selectedIndex = index;
+      if (activeCategory !== "All" &&
+        !operationCategories(operations[index].endpoint[operations[index].method]).includes(activeCategory)) {
+        activeCategory = "All";
+        filters.querySelectorAll("button").forEach((item) =>
+          item.setAttribute("aria-pressed", String(item.textContent === "All")),
+        );
+      }
+      renderList();
+    });
   }
   const observedWidths = new WeakMap();
   const observer = new ResizeObserver((entries) => {
