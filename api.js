@@ -112,10 +112,10 @@ function rotateCompatibleAppTypes() {
     document.querySelector(`.app-screenshots--phones li[data-type="${type}"]`),
   );
   let compatibleIndex = 0;
-  // the active phone is placed in the middle via flex order
+  // left, center, right; matches the initial order in the HTML
+  const positions = [slots[2], slots[0], slots[1]];
   const layout = () => {
-    slots.forEach((slot, i) => {
-      const order = (i - compatibleIndex + 1 + slots.length) % slots.length;
+    positions.forEach((slot, order) => {
       slot.style.order = order;
       slot.classList.toggle("is-center", order === 1);
     });
@@ -130,6 +130,9 @@ function rotateCompatibleAppTypes() {
     }, 250);
     const before = slots.map((slot) => slot.getBoundingClientRect().left);
     compatibleIndex = (compatibleIndex + 1) % compatibleTypes.length;
+    // swap the incoming phone with the one currently in the middle
+    const from = positions.indexOf(slots[compatibleIndex]);
+    [positions[from], positions[1]] = [positions[1], positions[from]];
     layout();
     slots.forEach((slot, i) => {
       const dx = before[i] - slot.getBoundingClientRect().left;
